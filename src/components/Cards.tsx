@@ -8,10 +8,10 @@ export const Cards = () => {
       </div>
 
       <section className="flex flex-col gap-5 py-7 hover:gap-8 transition-all duration-300">
-        <Card name="first" homem={true} />
-        <Card name="second" homem={false} />
-        <Card name="third" homem={true} />
-        <Card name="forth" homem={false} />
+        <Card name="Giovanna Peres" homem={false} />
+        <Card name="Julia Cordeiro" homem={false} />
+        <Card name="Yasmin Stéfany" homem={false} />
+        <Card name="Alice Gomes" homem={false} />
       </section>
     </main>
   )

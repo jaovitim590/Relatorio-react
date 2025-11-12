@@ -17,10 +17,10 @@ export const Aluno = () => {
   const { aluno } = useParams<{ aluno: string }>();
 
   const dados = {
-    first: { nome: "Giovanna Peres", genero: "Feminino" },
-    second: { nome: "Julia Cordeiro", genero: "Feminino" },
-    third: { nome: "Yasmin Stéfany", genero: "Feminino" },
-    forth: { nome: "Alice Gomes", genero: "Feminino" },
+    "Giovanna Peres": { nome: "Giovanna Peres", genero: "Feminino" },
+    "Julia Cordeiro": { nome: "Julia Cordeiro", genero: "Feminino" },
+    "Yasmin Stéfany": { nome: "Yasmin Stéfany", genero: "Feminino" },
+    "Alice Gomes": { nome: "Alice Gomes", genero: "Feminino" },
   };
 
   const info = dados[aluno as keyof typeof dados];
