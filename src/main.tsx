@@ -7,6 +7,7 @@ import { Home } from "./Home";
 import { Aluno } from "./pages/aluno";
 import { Login } from "./pages/login";
 import { AuthProvider } from "./context/AuthContext";
+import { Relatorio } from "./pages/relatorio"; // 👈 importe a nova página
 
 const router = createBrowserRouter([
   {
@@ -38,6 +39,14 @@ const router = createBrowserRouter([
     element: (
       <AuthProvider>
         <Aluno />
+      </AuthProvider>
+    ),
+  },
+  {
+    path: "/relatorio/:id",
+    element: (
+      <AuthProvider>
+        <Relatorio />
       </AuthProvider>
     ),
   },

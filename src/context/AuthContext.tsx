@@ -16,8 +16,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   const login = (username: string, password: string) => {
-    // Simples verificação
-    if (username === "admin" && password === "1234") {
+
+    if (username === "admin" && password === "250708") {
       setUser(username);
       navigate("/dashboard");
     } else {

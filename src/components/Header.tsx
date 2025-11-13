@@ -5,7 +5,7 @@ type Rota= {
 }
 
 export const Header = ({nome}: Rota) => {
-    const labelBt = nome === "" ? "Voltar" : "Dash";
+    const labelBt = nome === "" ? "Start" : "Dash";
 
   return (
     <header>

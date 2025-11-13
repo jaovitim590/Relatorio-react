@@ -1,11 +1,14 @@
 import GlareHover from './GlareHover'
+import { Link } from 'react-router-dom'
 
 type DataProps = {
   dia: string
+  id: number
 }
 
-export const Data = ({ dia }: DataProps) => {
+export const Data = ({ dia, id }: DataProps) => {
   return (
+    <Link to={`/relatorio/${id}`}>
     <div className="flex justify-center items-center">
       <GlareHover
         glareColor="#ffffff"
@@ -24,5 +27,6 @@ export const Data = ({ dia }: DataProps) => {
         <h2 className="text-2xl font-medium">{dia}</h2>
       </GlareHover>
     </div>
+    </Link>
   )
 }

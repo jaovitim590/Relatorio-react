@@ -1,6 +1,30 @@
 import { Link } from "react-router-dom"
+import { useEffect, useState } from "react";
+import { alunoSerice } from "../service/alunoService";
+
+
+type Aluno = {
+  id: number;
+  nome: string;
+  mulher: boolean;
+};
 
 export const Cards = () => {
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
+
+  useEffect(() => {
+    const fetchAlunos = async () => {
+      try {
+        const data = await alunoSerice.getAlunos();
+        setAlunos(data);
+      } catch (error) {
+        console.error("Erro ao carregar alunos:", error);
+      }
+    };
+
+    fetchAlunos();
+  }, []);
+
   return (
     <main className="w-full flex flex-col items-center text-white mt-6">
       <div className="mb-4">
@@ -8,10 +32,9 @@ export const Cards = () => {
       </div>
 
       <section className="flex flex-col gap-5 py-7 hover:gap-8 transition-all duration-300">
-        <Card name="Giovanna Peres" homem={false} />
-        <Card name="Julia Cordeiro" homem={false} />
-        <Card name="Yasmin Stéfany" homem={false} />
-        <Card name="Alice Gomes" homem={false} />
+        {alunos.map((aluno) => (
+          <Card key={aluno.id} name={aluno.nome} homem={!aluno.mulher} />
+        ))}
       </section>
     </main>
   )
