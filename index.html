@@ -1,10 +1,48 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="preload-theme">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/icons8-cello-16.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0d0f" />
     <title>relatorio_v2</title>
+
+    <!-- Inline styles to guarantee dark background on first paint and disable transitions during initial paint -->
+    <style>
+      /* garante fundo escuro antes do JS/CSS carregarem */
+      html, body, #root {
+        background: #0b0d0f !important;
+        color: #ffffff !important;
+        min-height: 100%;
+      }
+
+      /* bloqueia transições enquanto o tema inicial é aplicado (evita animação branco->escuro) */
+      .preload-theme, .preload-theme * {
+        transition: none !important;
+      }
+    </style>
+
+    <!-- Script inline que aplica a classe .dark imediatamente (usa localStorage ou prefers-color-scheme) -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme'); // sua chave de tema (ajuste se for outra)
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var useDark = stored === 'dark' || (!stored && prefersDark);
+          if (useDark) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          // se algo falhar, não interrompe o carregamento
+        } finally {
+          // removemos a classe que cancela transições logo após o primeiro frame
+          // assim as transições normais voltam a funcionar depois que a página estiver pronta
+          requestAnimationFrame(function () {
+            document.documentElement.classList.remove('preload-theme');
+          });
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
