@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { relatorioService } from "../service/relatorioService";
-import { Header } from "../components/Header";
+import { Header } from "../assets/components/Header";
 
 type Relatorio = {
   id: number;

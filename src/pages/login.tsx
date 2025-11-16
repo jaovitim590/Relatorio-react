@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Header } from "../components/Header";
-import DarkVeil from "../components/DarkVeil";
-import GlareHover from "../components/GlareHover";
+import { Header } from "../assets/components/Header";
+import DarkVeil from "../assets/components/DarkVeil";
+import GlareHover from "../assets/components/GlareHover";
 
 export const Login = () => {
   const { login } = useAuth();

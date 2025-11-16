@@ -2,7 +2,6 @@ import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 type AuthContextType = {
   user: string | null;
   login: (username: string, password: string) => void;
@@ -13,10 +12,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // ✅ funciona agora, dentro do Router
 
   const login = (username: string, password: string) => {
-
     if (username === "admin" && password === "250708") {
       setUser(username);
       navigate("/dashboard");

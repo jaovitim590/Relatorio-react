@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Header } from "../components/Header";
-import { Data } from "../components/Data";
+import { Header } from "../assets/components/Header";
+import { Data } from "../assets/components/Data";
 import { relatorioService } from "../service/relatorioService";
 
 type Relatorio = {

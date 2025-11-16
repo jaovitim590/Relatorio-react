@@ -1,5 +1,5 @@
-import { Header } from "./components/Header"
-import { Cards } from "./components/Cards";
+import { Header } from "./assets/components/Header"
+import { Cards } from "./assets/components/Cards";
 
 export function Home(){
   return (

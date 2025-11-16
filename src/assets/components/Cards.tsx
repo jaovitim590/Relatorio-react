@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { useEffect, useState } from "react";
-import { alunoSerice } from "../service/alunoService";
+import { alunoService } from "../../service/alunoService";
 
 
 type Aluno = {
@@ -15,7 +15,7 @@ export const Cards = () => {
   useEffect(() => {
     const fetchAlunos = async () => {
       try {
-        const data = await alunoSerice.getAlunos();
+        const data = await alunoService.getAlunos();
         setAlunos(data);
       } catch (error) {
         console.error("Erro ao carregar alunos:", error);
