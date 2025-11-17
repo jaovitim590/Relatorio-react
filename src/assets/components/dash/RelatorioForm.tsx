@@ -12,7 +12,7 @@ export interface AlunoRef { id: number; nome: string; mulher: boolean; }
 export interface RelatorioFormState {
   values: {
     aluno_id: AlunoRef | null;
-    data: string;
+    dia: string;
     observacao: string;
     escalas: string;
     repertorio: string;
@@ -108,8 +108,8 @@ export default function RelatorioForm({ formState, onFieldChange, onSubmit, subm
             fullWidth
             label="Data"
             InputLabelProps={{ shrink: true }}
-            value={formState.values.data}
-            onChange={e => onFieldChange("data", e.target.value)}
+            value={formState.values.dia}
+            onChange={e => onFieldChange("dia", e.target.value)}
             error={!!formState.errors.data}
             helperText={formState.errors.data ?? ""}
           />

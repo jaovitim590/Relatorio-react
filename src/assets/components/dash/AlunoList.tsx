@@ -9,7 +9,7 @@ import {
   gridClasses,
 } from "@mui/x-data-grid";
 import axios from "axios";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageContainer from "./PageContainer";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
@@ -25,9 +25,7 @@ import { useDialogs } from "../../../hooks/useDialogs/useDialogs";
 import useNotifications from "../../../hooks/useNotifications/useNotifications";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-
 import { API_URL } from "../../../service/api";
-
 interface Aluno {
   id: number;
   nome: string;
@@ -35,7 +33,6 @@ interface Aluno {
 }
 
 export default function AlunoList() {
-  const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dialogs = useDialogs();
@@ -191,6 +188,12 @@ export default function AlunoList() {
               loading={isLoading}
               disableRowSelectionOnClick
               pageSizeOptions={[5, 10, 20]}
+              initialState={{
+                sorting: {
+                  sortModel: [{ field: 'id', sort: 'asc' }],
+                }
+              }}
+                
               showToolbar
               sx={{
                 [`& .${gridClasses.columnHeader}, & .${gridClasses.cell}`]: { outline: "transparent" },

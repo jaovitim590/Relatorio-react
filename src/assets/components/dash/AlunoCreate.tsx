@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_URL } from "../../../service/api";
+import { alunoService } from "../../../service/alunoService"; // ← importar service
 import AlunoForm from "./AlunoForm";
 
 interface AlunoValues {
@@ -19,7 +18,7 @@ export default function AlunoCreate() {
 
   const handleSubmit = async () => {
     try {
-      await axios.post(`${API_URL}/aluno`, values);
+      await alunoService.criarAluno(values); // ← usar service com /salvar
       navigate("/dashboard/alunos");
     } catch (err) {
       console.error(err);
@@ -27,15 +26,15 @@ export default function AlunoCreate() {
   };
 
   return (
-    <div className="flex flex-col justify-center items">
+    <div className="flex flex-col justify-center items-center">
       <h2 className="text-4xl text-center py-12">Criar aluno</h2>
       <AlunoForm
-                formState={{ values, errors: {} }}
-                onFieldChange={handleChange}
-                onSubmit={handleSubmit}
-                backPath="/dashboard/alunos"
-                submitLabel="Salvar"
-              />
+        formState={{ values, errors: {} }}
+        onFieldChange={handleChange}
+        onSubmit={handleSubmit}
+        backPath="/dashboard/alunos"
+        submitLabel="Salvar"
+      />
     </div>
   );
 }

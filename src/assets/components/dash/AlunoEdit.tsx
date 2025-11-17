@@ -1,8 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { API_URL } from "../../../service/api";
 import AlunoForm, { type AlunoFormState } from "./AlunoForm";
+import { alunoService } from "../../../service/alunoService";
 
 export default function AlunoEdit() {
   const { id } = useParams<{ id: string }>();
@@ -14,10 +13,9 @@ export default function AlunoEdit() {
   });
 
   useEffect(() => {
-  axios
-    .get(`${API_URL}/aluno/${id}`)
-    .then((res) => {
-      const data = res.data as { nome: string; mulher: boolean }; 
+  const fetchAluno = async () => {
+    try {
+      const data = await alunoService.getAlunoById(Number(id)); // ← usar service
       setFormState((prev) => ({
         ...prev,
         values: {
@@ -25,8 +23,11 @@ export default function AlunoEdit() {
           mulher: !!data.mulher,
         },
       }));
-    })
-    .catch((err) => console.error(err));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  fetchAluno();
 }, [id]);
 
   const handleFieldChange = (field: keyof AlunoFormState["values"], value: string | boolean) => {
@@ -38,7 +39,7 @@ export default function AlunoEdit() {
 
   const handleSubmit = async (values: AlunoFormState["values"]) => {
     try {
-      await axios.patch(`${API_URL}/aluno/update/${id}`, values);
+      await alunoService.atualizarAluno(Number(id), values); // ← usar service
       navigate("/dashboard/alunos");
     } catch (err) {
       console.error(err);
@@ -53,7 +54,7 @@ export default function AlunoEdit() {
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}        
         backPath="/dashboard/alunos"
-        submitLabel="Salvar"
+        submitLabel="atualizar"
       />
     </div>
   );

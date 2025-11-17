@@ -1,6 +1,11 @@
 import axios from "axios";
 import { API_URL } from "./api";
 
+interface AlunoData {
+  nome: string;
+  mulher: boolean;
+}
+
 export const alunoService = {
   getAlunos: async () => {
     try {
@@ -22,9 +27,9 @@ export const alunoService = {
     }
   },
 
-  criarAluno: async (aluno: string) => {
+  criarAluno: async (aluno: AlunoData) => {
     try {
-      const response = await axios.post(`${API_URL}/aluno`, aluno);
+      const response = await axios.post(`${API_URL}/aluno/salvar`, aluno); // ← mudou para /salvar
       return response.data;
     } catch (error) {
       console.error("Erro ao criar aluno:", error);
@@ -32,9 +37,9 @@ export const alunoService = {
     }
   },
 
-  atualizarAluno: async (id: number, aluno: string) => {
+  atualizarAluno: async (id: number, aluno: AlunoData) => {
     try {
-      const response = await axios.put(`${API_URL}/aluno/${id}`, aluno);
+      const response = await axios.patch(`${API_URL}/aluno/update/${id}`, aluno); // ← PATCH + /update
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar aluno ${id}:`, error);

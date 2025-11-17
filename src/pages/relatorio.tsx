@@ -49,7 +49,7 @@ export const Relatorio = () => {
   useEffect(() => {
     const fetchRelatorio = async () => {
       try {
-        const data = await relatorioService.relatorioById(Number(id));
+        const data = await relatorioService.getRelatorioById(Number(id));
         setRelatorio(data);
       } catch (error) {
         console.error(error);

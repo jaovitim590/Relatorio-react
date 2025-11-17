@@ -1,20 +1,38 @@
 import axios from "axios";
 import { API_URL } from "./api";
 
+interface RelatorioData {
+  aluno_id: number;
+  dia: string;
+  observacao: string;
+  escalas: string;
+  repertorio: string;
+}
+
 export const relatorioService = {
   relatorioByNome: async (nome: string) => {
     try {
-      const response = await axios.get(`${API_URL}/relatorio/buscar/${encodeURIComponent(nome)}`);
-      return response.data; // axios já retorna o JSON em data
+      const response = await axios.get(`${API_URL}/relatorio/buscar/${nome}`);
+      return response.data;
     } catch (error) {
-      console.error("Erro ao buscar relatório por nome:", error);
+      console.error(`Erro ao buscar relatórios do aluno ${nome}:`, error);
       throw error;
     }
   },
 
-  relatorioById: async (id: number) => {
+  getRelatorios: async () => {
     try {
-      const response = await axios.get(`${API_URL}/relatorio/${encodeURIComponent(id)}`);
+      const response = await axios.get(`${API_URL}/relatorio`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar relatórios:", error);
+      throw error;
+    }
+  },
+
+  getRelatorioById: async (id: number) => {
+    try {
+      const response = await axios.get(`${API_URL}/relatorio/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar relatório ${id}:`, error);
@@ -22,9 +40,9 @@ export const relatorioService = {
     }
   },
 
-  criarRelatorio: async (relatorio: any) => {
+  criarRelatorio: async (relatorio: RelatorioData) => {
     try {
-      const response = await axios.post(`${API_URL}/relatorio`, relatorio);
+      const response = await axios.post(`${API_URL}/relatorio/salvar`, relatorio);
       return response.data;
     } catch (error) {
       console.error("Erro ao criar relatório:", error);
@@ -32,9 +50,9 @@ export const relatorioService = {
     }
   },
 
-  atualizarRelatorio: async (id: number, relatorio: any) => {
+  atualizarRelatorio: async (id: number, relatorio: RelatorioData) => {
     try {
-      const response = await axios.put(`${API_URL}/relatorio/${id}`, relatorio);
+      const response = await axios.patch(`${API_URL}/relatorio/update/${id}`, relatorio);
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar relatório ${id}:`, error);
