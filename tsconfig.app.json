@@ -26,10 +26,9 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-
-    // Mantido da versão anterior. As configurações de "paths" e "baseUrl" são herdadas do tsconfig.json base.
     "composite": true
   },
-  "include": ["src"],
+  // --- ALTERAÇÃO AQUI ---
+  "include": ["src", "mixins.ts"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts", "vitest.config.ts", "setupTests.ts"]
-}
+} 
