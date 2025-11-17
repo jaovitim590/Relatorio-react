@@ -26,7 +26,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "ignoreDeprecations": "6.0", // Mantido conforme sua solicitação
 
     // Mantido da versão anterior. As configurações de "paths" e "baseUrl" são herdadas do tsconfig.json base.
     "composite": true
