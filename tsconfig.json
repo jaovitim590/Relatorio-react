@@ -5,6 +5,9 @@
     { "path": "./tsconfig.node.json" }
   ],
   "compilerOptions": {
+     "composite": false,
+    "declaration": false,
+    "declarationMap": false,
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
