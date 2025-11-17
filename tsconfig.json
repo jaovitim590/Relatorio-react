@@ -5,19 +5,11 @@
     { "path": "./tsconfig.node.json" }
   ],
   "compilerOptions": {
-     "composite": false,
-    "declaration": false,
-    "declarationMap": false,
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "strict": true,
-    "jsx": "react-jsx",
-    "baseUrl": "./",
+    // A opção 'baseUrl' foi removida, pois é obsoleta (deprecated) e não é mais necessária 
+    // quando 'paths' são definidos de forma relativa ao projeto (que é o padrão).
     "paths": {
-      "@/*": ["src/*"]
+      // Configuração de atalho de importação (ex: import { App } from '@/components/App')
+      "@/*": ["./src/*"] 
     }
-  },
-  "include": ["src"]
+  }
 }

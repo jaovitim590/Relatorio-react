@@ -1,8 +1,10 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2022",
     "useDefineForClassFields": true,
+    // Garante tipagem para o navegador e recursos JavaScript modernos
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "types": ["vite/client"],
@@ -24,13 +26,11 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+    "ignoreDeprecations": "6.0", // Mantido conforme sua solicitação
 
-    /* 👇 ADICIONE ISSO 👇 */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
-
+    // Mantido da versão anterior. As configurações de "paths" e "baseUrl" são herdadas do tsconfig.json base.
+    "composite": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts", "vitest.config.ts", "setupTests.ts"]
 }
