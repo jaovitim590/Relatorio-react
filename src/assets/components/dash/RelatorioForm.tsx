@@ -6,6 +6,7 @@ import TextField from "@mui/material/TextField";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 
 export interface AlunoRef { id: number; nome: string; mulher: boolean; }
 
@@ -19,7 +20,7 @@ export interface RelatorioFormState {
   };
   errors: Partial<{
     aluno_id: string;
-    data: string;
+    dia: string;
     observacao: string;
     escalas: string;
     repertorio: string;
@@ -35,14 +36,25 @@ export interface RelatorioFormProps {
   alunos: AlunoRef[];
 }
 
-export default function RelatorioForm({ formState, onFieldChange, onSubmit, submitLabel = "Salvar", backPath, alunos }: RelatorioFormProps) {
+export default function RelatorioForm({ 
+  formState, 
+  onFieldChange, 
+  onSubmit, 
+  submitLabel = "Salvar", 
+  backPath, 
+  alunos 
+}: RelatorioFormProps) {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    try { await onSubmit(formState.values); } finally { setIsSubmitting(false); }
+    try { 
+      await onSubmit(formState.values); 
+    } finally { 
+      setIsSubmitting(false); 
+    }
   };
 
   const handleBack = () => navigate(backPath ?? "/dashboard/relatorios");
@@ -53,32 +65,18 @@ export default function RelatorioForm({ formState, onFieldChange, onSubmit, subm
       onSubmit={handleSubmit}
       sx={{
         width: "100%",
-        maxWidth: 600,
+        maxWidth: 900,
         mx: "auto",
-        mt: 5,
-        p: 4,
+        mt: 3,
+        p: { xs: 2, sm: 4 },
         bgcolor: "grey.900",
         borderRadius: 2,
       }}
     >
-      {/* Use CSS grid via Box to avoid Grid typing mismatches */}
-      <Box
-        sx={{
-          display: "flex",
-          flex: 1,
-          flexDirection: "column",
-          gap: 3,
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
-        }}
-      >
-        <Box 
-        sx={{
-          display: "flex",
-          justifyContent: "space-evenly",
-          paddingBottom: 8
-        }}
-        >
-        <Box>
+      <Stack spacing={3}>
+
+        {/* Aluno e Data */}
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             select
             fullWidth
@@ -100,9 +98,7 @@ export default function RelatorioForm({ formState, onFieldChange, onSubmit, subm
               </MenuItem>
             ))}
           </TextField>
-        </Box>
 
-        <Box>
           <TextField
             type="date"
             fullWidth
@@ -110,53 +106,65 @@ export default function RelatorioForm({ formState, onFieldChange, onSubmit, subm
             InputLabelProps={{ shrink: true }}
             value={formState.values.dia}
             onChange={e => onFieldChange("dia", e.target.value)}
-            error={!!formState.errors.data}
-            helperText={formState.errors.data ?? ""}
+            error={!!formState.errors.dia}
+            helperText={formState.errors.dia ?? ""}
           />
-        </Box>
-        </Box>
+        </Stack>
 
-        <Box sx={{ gridColumn: { xs: "1 / -1", sm: "auto" } }}>
-          <TextField
-            fullWidth
-            label="Observação"
-            value={formState.values.observacao}
-            onChange={e => onFieldChange("observacao", e.target.value)}
-            error={!!formState.errors.observacao}
-            helperText={formState.errors.observacao ?? ""}
-          />
-        </Box>
+        {/* Observação */}
+        <TextField
+          fullWidth
+          label="Observação"
+          multiline
+          minRows={6}
+          maxRows={15}
+          value={formState.values.observacao}
+          onChange={e => onFieldChange("observacao", e.target.value)}
+          error={!!formState.errors.observacao}
+          helperText={formState.errors.observacao ?? "Digite as observações da aula"}
+          placeholder="Ex: O aluno teve uma ótima evolução..."
+          sx={{ '& .MuiInputBase-root': { alignItems: 'flex-start' } }}
+        />
 
-        <Box>
-          <TextField
-            fullWidth
-            label="Escalas"
-            value={formState.values.escalas}
-            onChange={e => onFieldChange("escalas", e.target.value)}
-            error={!!formState.errors.escalas}
-            helperText={formState.errors.escalas ?? ""}
-          />
-        </Box>
+        {/* Escalas — agora só uma */}
+        <TextField
+          fullWidth
+          label="Escalas"
+          multiline
+          minRows={8}
+          maxRows={20}
+          value={formState.values.escalas}
+          onChange={e => onFieldChange("escalas", e.target.value)}
+          error={!!formState.errors.escalas}
+          helperText={formState.errors.escalas ?? "Descreva as escalas e exercícios praticados"}
+          placeholder="Ex: Escala de Dó maior..."
+          sx={{ '& .MuiInputBase-root': { alignItems: 'flex-start' } }}
+        />
 
-        <Box>
-          <TextField
-            fullWidth
-            label="Repertório"
-            value={formState.values.repertorio}
-            onChange={e => onFieldChange("repertorio", e.target.value)}
-            error={!!formState.errors.repertorio}
-            helperText={formState.errors.repertorio ?? ""}
-          />
-        </Box>
-      </Box>
+        {/* Repertório */}
+        <TextField
+          fullWidth
+          label="Repertório"
+          multiline
+          minRows={8}
+          maxRows={20}
+          value={formState.values.repertorio}
+          onChange={e => onFieldChange("repertorio", e.target.value)}
+          error={!!formState.errors.repertorio}
+          helperText={formState.errors.repertorio ?? "Liste as músicas trabalhadas"}
+          placeholder="1. Música X..."
+          sx={{ '& .MuiInputBase-root': { alignItems: 'flex-start' } }}
+        />
+
+      </Stack>
 
       <Stack direction="row" spacing={2} sx={{ mt: 4 }} justifyContent="space-between">
         {backPath && (
-          <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={handleBack}>
+          <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack}>
             Voltar
           </Button>
         )}
-        <Button type="submit" variant="contained" disabled={isSubmitting}>
+        <Button type="submit" variant="contained" disabled={isSubmitting} size="large">
           {submitLabel}
         </Button>
       </Stack>
