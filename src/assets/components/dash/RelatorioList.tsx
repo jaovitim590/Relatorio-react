@@ -6,6 +6,12 @@ import {
   type GridPaginationModel,
   type GridRowParams,
   gridClasses,
+  GridToolbarContainer,
+  GridToolbarColumnsButton,
+  GridToolbarFilterButton,
+  GridToolbarDensitySelector,
+  GridToolbarExport,
+  GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
@@ -20,6 +26,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import EditIcon from "@mui/icons-material/Edit";
@@ -78,6 +85,36 @@ export default function RelatorioList() {
     loadData();
   }, [loadData]);
 
+  // Ordena relatórios e agrupa por aluno
+  const relatoriosOrdenados = React.useMemo(() => {
+    return [...relatorios].sort((a, b) => {
+      // Primeiro ordena por nome do aluno
+      const nomeCompare = a.aluno.nome.localeCompare(b.aluno.nome);
+      if (nomeCompare !== 0) return nomeCompare;
+      
+      // Depois ordena por data (mais recente primeiro)
+      return new Date(b.dia).getTime() - new Date(a.dia).getTime();
+    });
+  }, [relatorios]);
+
+  // Agrupa relatórios por aluno para view mobile
+  const relatoriosAgrupados = React.useMemo(() => {
+    const grupos = relatoriosOrdenados.reduce((acc, relatorio) => {
+      const nomeAluno = relatorio.aluno.nome;
+      if (!acc[nomeAluno]) {
+        acc[nomeAluno] = [];
+      }
+      acc[nomeAluno].push(relatorio);
+      return acc;
+    }, {} as Record<string, Relatorio[]>);
+
+    // Retorna os grupos em ordem
+    return Object.keys(grupos).map((nomeAluno) => ({
+      nomeAluno,
+      relatorios: grupos[nomeAluno],
+    }));
+  }, [relatoriosOrdenados]);
+
   const handleRefresh = () => {
     if (!isLoading) loadData();
   };
@@ -103,96 +140,108 @@ export default function RelatorioList() {
     [dialogs, notifications, loadData]
   );
 
+  // Componente customizado da Toolbar
+  function CustomToolbar() {
+    return (
+      <GridToolbarContainer>
+        <GridToolbarColumnsButton />
+        <GridToolbarFilterButton />
+        <GridToolbarDensitySelector />
+        <GridToolbarExport />
+        <Box sx={{ flexGrow: 1 }} />
+        <GridToolbarQuickFilter debounceMs={500} />
+      </GridToolbarContainer>
+    );
+  }
+
   const columns: GridColDef<Relatorio>[] = [
-  { field: "id", headerName: "ID", width: 80 },
-  {
-    field: "aluno",
-    headerName: "Aluno",
-    width: 200,
-    renderCell: (params) => params.row?.aluno?.nome ?? "—",
-  },
-  { field: "dia", headerName: "Dia", width: 120 },
-
-  {
-    field: "observacao",
-    headerName: "Observação",
-    width: 200,
-    renderCell: (params) => (
-      <Tooltip title={params.value || ""}>
-        <div style={{
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}>
-          {params.value || "—"}
-        </div>
-      </Tooltip>
-    ),
-  },
-
-  // 👇 ADICIONADO
-  {
-    field: "repertorio",
-    headerName: "Repertório",
-    width: 200,
-    renderCell: (params) => (
-      <Tooltip title={params.value || ""}>
-        <div style={{
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}>
-          {params.value || "—"}
-        </div>
-      </Tooltip>
-    ),
-  },
-
-  // 👇 ADICIONADO
-  {
-    field: "escalas",
-    headerName: "Escalas",
-    width: 200,
-    renderCell: (params) => (
-      <Tooltip title={params.value || ""}>
-        <div style={{
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}>
-          {params.value || "—"}
-        </div>
-      </Tooltip>
-    ),
-  },
-
-  {
-    field: "actions",
-    type: "actions",
-    headerName: "Ações",
-    width: 150,
-    getActions: (params: GridRowParams<Relatorio>) => [
-      <GridActionsCellItem
-        key="view"
-        icon={<VisibilityIcon />}
-        label="Visualizar"
-        onClick={() => navigate(`/relatorio/${params.row.id}`)}
-      />,
-      <GridActionsCellItem
-        key="edit"
-        icon={<EditIcon />}
-        label="Editar"
-        onClick={() => navigate(`/dashboard/relatorios/${params.row.id}/edit`)}
-      />,
-      <GridActionsCellItem
-        key="delete"
-        icon={<DeleteIcon />}
-        label="Deletar"
-        onClick={handleDelete(params.row)}
-      />,
-    ],
-  },
-];
+    { field: "id", headerName: "ID", width: 80, sortable: false },
+    {
+      field: "aluno",
+      headerName: "Aluno",
+      width: 200,
+      sortable: false,
+      renderCell: (params) => params.row?.aluno?.nome ?? "—",
+    },
+    { field: "dia", headerName: "Dia", width: 120, sortable: false },
+    {
+      field: "observacao",
+      headerName: "Observação",
+      width: 200,
+      sortable: false,
+      renderCell: (params) => (
+        <Tooltip title={params.value || ""}>
+          <div style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}>
+            {params.value || "—"}
+          </div>
+        </Tooltip>
+      ),
+    },
+    {
+      field: "repertorio",
+      headerName: "Repertório",
+      width: 200,
+      sortable: false,
+      renderCell: (params) => (
+        <Tooltip title={params.value || ""}>
+          <div style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}>
+            {params.value || "—"}
+          </div>
+        </Tooltip>
+      ),
+    },
+    {
+      field: "escalas",
+      headerName: "Escalas",
+      width: 200,
+      sortable: false,
+      renderCell: (params) => (
+        <Tooltip title={params.value || ""}>
+          <div style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}>
+            {params.value || "—"}
+          </div>
+        </Tooltip>
+      ),
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Ações",
+      width: 150,
+      getActions: (params: GridRowParams<Relatorio>) => [
+        <GridActionsCellItem
+          key="view"
+          icon={<VisibilityIcon />}
+          label="Visualizar"
+          onClick={() => navigate(`/relatorio/${params.row.id}`)}
+        />,
+        <GridActionsCellItem
+          key="edit"
+          icon={<EditIcon />}
+          label="Editar"
+          onClick={() => navigate(`/dashboard/relatorios/${params.row.id}/edit`)}
+        />,
+        <GridActionsCellItem
+          key="delete"
+          icon={<DeleteIcon />}
+          label="Deletar"
+          onClick={handleDelete(params.row)}
+        />,
+      ],
+    },
+  ];
 
   const pageTitle = "Relatórios";
 
@@ -212,81 +261,87 @@ export default function RelatorioList() {
       {error ? (
         <Alert severity="error">{error.message}</Alert>
       ) : isMobile ? (
-        <Stack spacing={3}>
-          {relatorios.map((r) => (
-            <Card key={r.id} sx={{ bgcolor: "grey.900", color: "white" }}>
-              <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Chip label={`ID: ${r.id}`} size="small" color="primary" />
-                  <Typography variant="caption" color="grey.400">
-                    {new Date(r.dia).toLocaleDateString("pt-BR")}
-                  </Typography>
-                </Stack>
+        <Stack spacing={4}>
+          {relatoriosAgrupados.map((grupo) => (
+            <Box key={grupo.nomeAluno}>
+              <Typography variant="h5" gutterBottom sx={{ color: "primary.main", mb: 2 }}>
+                {grupo.nomeAluno}
+              </Typography>
+              <Stack spacing={2}>
+                {grupo.relatorios.map((r) => (
+                  <Card key={r.id} sx={{ bgcolor: "grey.900", color: "white" }}>
+                    <CardContent>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Chip label={`ID: ${r.id}`} size="small" color="primary" />
+                        <Typography variant="caption" color="grey.400">
+                          {new Date(r.dia).toLocaleDateString("pt-BR")}
+                        </Typography>
+                      </Stack>
 
-                <Typography variant="h6" gutterBottom>
-                  {r.aluno.nome}
-                </Typography>
+                      <Box mb={2}>
+                        <Typography variant="subtitle2" color="primary" gutterBottom>
+                          Observação:
+                        </Typography>
+                        <Typography variant="body2" color="grey.300" sx={{ whiteSpace: "pre-line" }}>
+                          {r.observacao}
+                        </Typography>
+                      </Box>
 
-                <Box mb={2}>
-                  <Typography variant="subtitle2" color="primary" gutterBottom>
-                    Observação:
-                  </Typography>
-                  <Typography variant="body2" color="grey.300" sx={{ whiteSpace: "pre-line" }}>
-                    {r.observacao}
-                  </Typography>
-                </Box>
+                      <Box mb={2}>
+                        <Typography variant="subtitle2" color="primary" gutterBottom>
+                          Repertório:
+                        </Typography>
+                        <Typography variant="body2" color="grey.300" sx={{ whiteSpace: "pre-line" }}>
+                          {r.repertorio}
+                        </Typography>
+                      </Box>
 
-                <Box mb={2}>
-                  <Typography variant="subtitle2" color="primary" gutterBottom>
-                    Repertório:
-                  </Typography>
-                  <Typography variant="body2" color="grey.300" sx={{ whiteSpace: "pre-line" }}>
-                    {r.repertorio}
-                  </Typography>
-                </Box>
+                      <Box mb={2}>
+                        <Typography variant="subtitle2" color="primary" gutterBottom>
+                          Escalas:
+                        </Typography>
+                        <Typography variant="body2" color="grey.300" sx={{ whiteSpace: "pre-line" }}>
+                          {r.escalas}
+                        </Typography>
+                      </Box>
 
-                <Box mb={2}>
-                  <Typography variant="subtitle2" color="primary" gutterBottom>
-                    Escalas:
-                  </Typography>
-                  <Typography variant="body2" color="grey.300" sx={{ whiteSpace: "pre-line" }}>
-                    {r.escalas}
-                  </Typography>
-                </Box>
-
-                <Stack direction="row" spacing={1} mt={3}>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<VisibilityIcon />}
-                    onClick={() => navigate(`/relatorio/${r.id}`)}
-                  >
-                    Ver Completo
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<EditIcon />}
-                    onClick={() => navigate(`/dashboard/relatorios/${r.id}/edit`)}
-                  >
-                    Editar
-                  </Button>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={handleDelete(r)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Stack>
-              </CardContent>
-            </Card>
+                      <Stack direction="row" spacing={1} mt={3}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<VisibilityIcon />}
+                          onClick={() => navigate(`/relatorio/${r.id}`)}
+                        >
+                          Ver Completo
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<EditIcon />}
+                          onClick={() => navigate(`/dashboard/relatorios/${r.id}/edit`)}
+                        >
+                          Editar
+                        </Button>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={handleDelete(r)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
+              <Divider sx={{ mt: 3 }} />
+            </Box>
           ))}
         </Stack>
       ) : (
-        <Box sx={{ height: 600, width: "100%" }}>
+        <Box sx={{ width: "100%", height: 600 }}>
           <DataGrid
-            rows={relatorios}
+            rows={relatoriosOrdenados}
             columns={columns}
             getRowId={(row) => row.id}
             pagination
@@ -296,10 +351,9 @@ export default function RelatorioList() {
             pageSizeOptions={[5, 10, 20]}
             loading={isLoading}
             disableRowSelectionOnClick
-            initialState={{
-              sorting: {
-                sortModel: [{ field: 'id', sort: 'asc' }],
-              },
+            showToolbar
+            slots={{
+              toolbar: CustomToolbar,
             }}
             sx={{
               [`& .${gridClasses.columnHeader}, & .${gridClasses.cell}`]: { outline: "transparent" },
