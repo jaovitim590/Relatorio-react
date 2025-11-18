@@ -4,7 +4,6 @@ import { relatorioService } from "../../../service/relatorioService";
 import { alunoService } from "../../../service/alunoService";
 import RelatorioForm, { type AlunoRef, type RelatorioFormState } from "./RelatorioForm";
 
-// Chave única para salvar no localStorage
 const DRAFT_STORAGE_KEY = "relatorio_draft";
 
 export default function RelatorioCreate() {
@@ -36,13 +35,12 @@ export default function RelatorioCreate() {
     fetchAlunos();
   }, []);
 
-  // Verificar se existe um rascunho salvo ao montar o componente
+  // Verificar rascunho salvo
   useEffect(() => {
     const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (savedDraft) {
       try {
         const parsed = JSON.parse(savedDraft);
-        // Verifica se há dados preenchidos
         const hasData =
           parsed.data.dia ||
           parsed.data.observacao ||
@@ -60,10 +58,9 @@ export default function RelatorioCreate() {
     }
   }, []);
 
-  // Auto-save: salva no localStorage quando o formulário muda
+  // Auto-save
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      // Verifica se há algum dado preenchido
       const hasData =
         formState.values.dia ||
         formState.values.observacao ||
@@ -72,26 +69,21 @@ export default function RelatorioCreate() {
         formState.values.aluno_id;
 
       if (hasData) {
-        const draftData = {
-          data: {
-            aluno_id: formState.values.aluno_id,
-            dia: formState.values.dia,
-            observacao: formState.values.observacao,
-            escalas: formState.values.escalas,
-            repertorio: formState.values.repertorio,
-          },
-          timestamp: new Date().toISOString(),
-        };
-
-        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+        localStorage.setItem(
+          DRAFT_STORAGE_KEY,
+          JSON.stringify({
+            data: formState.values,
+            timestamp: new Date().toISOString(),
+          })
+        );
         setLastSaved(new Date());
       }
-    }, 1000); // Salva 1 segundo após parar de digitar
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
   }, [formState.values]);
 
-  // Aviso antes de sair da página (previne perda acidental)
+  // Aviso antes de sair
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       const hasData =
@@ -103,7 +95,7 @@ export default function RelatorioCreate() {
 
       if (hasData) {
         e.preventDefault();
-        e.returnValue = "Você tem alterações não salvas. Deseja realmente sair?";
+        e.returnValue = "";
       }
     };
 
@@ -111,23 +103,19 @@ export default function RelatorioCreate() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [formState.values]);
 
-  // Função para recuperar o rascunho salvo
   const handleRecoverDraft = () => {
     const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (savedDraft) {
       try {
         const parsed = JSON.parse(savedDraft);
-        
-        // Recupera o aluno salvo (precisa encontrar o objeto completo na lista)
         let alunoRecuperado: AlunoRef | null = null;
         if (parsed.data.aluno_id) {
-          alunoRecuperado = alunos.find(
-            (aluno) => aluno.id === parsed.data.aluno_id?.id
-          ) || parsed.data.aluno_id;
+          alunoRecuperado =
+            alunos.find((aluno) => aluno.id === parsed.data.aluno_id?.id) ||
+            parsed.data.aluno_id;
         }
 
-        setFormState((prev) => ({
-          ...prev,
+        setFormState({
           values: {
             aluno_id: alunoRecuperado,
             dia: parsed.data.dia || "",
@@ -135,7 +123,8 @@ export default function RelatorioCreate() {
             escalas: parsed.data.escalas || "",
             repertorio: parsed.data.repertorio || "",
           },
-        }));
+          errors: {},
+        });
         setShowRecoverMessage(false);
       } catch (error) {
         console.error("Erro ao recuperar rascunho:", error);
@@ -144,7 +133,6 @@ export default function RelatorioCreate() {
     }
   };
 
-  // Função para descartar o rascunho
   const handleDiscardDraft = () => {
     localStorage.removeItem(DRAFT_STORAGE_KEY);
     setShowRecoverMessage(false);
@@ -166,6 +154,11 @@ export default function RelatorioCreate() {
       return;
     }
 
+    if (!values.dia) {
+      alert("Selecione uma data!");
+      return;
+    }
+
     try {
       await relatorioService.criarRelatorio({
         aluno_id: values.aluno_id.id,
@@ -175,9 +168,7 @@ export default function RelatorioCreate() {
         repertorio: values.repertorio,
       });
 
-      // Limpa o rascunho após salvar com sucesso
       localStorage.removeItem(DRAFT_STORAGE_KEY);
-      
       navigate("/dashboard/relatorios");
     } catch (err) {
       console.error(err);
@@ -189,12 +180,12 @@ export default function RelatorioCreate() {
     <div className="flex flex-col justify-center items-center">
       <h2 className="text-4xl text-center py-12">Criar Relatório</h2>
 
-      {/* Mensagem de rascunho encontrado */}
+      {/* Mensagem de rascunho */}
       {showRecoverMessage && (
-        <div className="w-full max-w-2xl mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="w-full max-w-3xl mb-6 bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 text-blue-600 mt-0.5 shrink-0"
+              className="w-5 h-5 text-blue-400 mt-0.5 shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -207,22 +198,22 @@ export default function RelatorioCreate() {
               />
             </svg>
             <div className="flex-1">
-              <h3 className="font-semibold text-blue-900 mb-1">
+              <h3 className="font-semibold text-blue-300 mb-1">
                 Rascunho encontrado
               </h3>
-              <p className="text-sm text-blue-700 mb-3">
-                Encontramos um rascunho salvo anteriormente. Deseja recuperá-lo?
+              <p className="text-sm text-blue-200/80 mb-3">
+                Encontramos um rascunho salvo. Deseja recuperá-lo?
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={handleRecoverDraft}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  Recuperar Rascunho
+                  Recuperar
                 </button>
                 <button
                   onClick={handleDiscardDraft}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 bg-white/10 text-white rounded-md text-sm font-medium hover:bg-white/20 transition-colors"
                 >
                   Descartar
                 </button>
@@ -232,9 +223,9 @@ export default function RelatorioCreate() {
         </div>
       )}
 
-      {/* Indicador de salvamento automático */}
+      {/* Indicador de salvamento */}
       {lastSaved && (
-        <div className="w-full max-w-2xl mb-4 text-sm text-gray-600 flex items-center justify-end gap-2">
+        <div className="w-full max-w-3xl mb-4 text-sm text-gray-400 flex items-center justify-end gap-2">
           <svg
             className="w-4 h-4 text-green-500"
             fill="none"
@@ -248,12 +239,11 @@ export default function RelatorioCreate() {
               d="M5 13l4 4L19 7"
             />
           </svg>
-          <span>
-            Salvo automaticamente às {lastSaved.toLocaleTimeString("pt-BR")}
-          </span>
+          <span>Salvo às {lastSaved.toLocaleTimeString("pt-BR")}</span>
         </div>
       )}
 
+      {/* Formulário */}
       <RelatorioForm
         formState={formState}
         onFieldChange={handleFieldChange}
@@ -263,12 +253,10 @@ export default function RelatorioCreate() {
         alunos={alunos}
       />
 
-      {/* Dica sobre auto-save */}
-      <div className="w-full max-w-2xl mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">
-        <p className="text-sm text-gray-600">
-          <strong>💡 Dica:</strong> Seus dados são salvos automaticamente a cada
-          segundo. Você pode sair e voltar a qualquer momento sem perder seu
-          progresso.
+      {/* Dica */}
+      <div className="w-full max-w-3xl mt-6 p-4 bg-white/5 rounded-md border border-white/10">
+        <p className="text-sm text-gray-400">
+          <strong>💡 Dica:</strong> Dados salvos automaticamente. Adicione quantas escalas precisar!
         </p>
       </div>
     </div>

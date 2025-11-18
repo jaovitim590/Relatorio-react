@@ -88,7 +88,7 @@ export const Relatorio = () => {
         <section className="bg-white text-black w-full max-w-3xl rounded-3xl p-8 shadow-lg text-1xl">
           <p className="text-2xl">
             <strong>Dia:</strong>{" "}
-            {new Date(relatorio.dia).toLocaleDateString("pt-BR")}
+            {new Date(relatorio.dia).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
           </p>
 
           <div className="mt-4">
