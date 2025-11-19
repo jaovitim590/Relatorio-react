@@ -17,13 +17,38 @@ type Relatorio = {
 };
 
 function extrairEscalas(texto: string): { chave: string; valor: string }[] {
-  if (!texto) return [];
+  if (!texto || texto.trim() === "") return [];
 
+  // Verifica se está no formato novo: ESCALA:nome|conteudo;ESCALA:nome2|conteudo2
+  if (texto.includes("ESCALA:") && texto.includes("|")) {
+    try {
+      const escalas = texto
+        .split(";")
+        .filter(e => e.trim())
+        .map(escalaStr => {
+          const match = escalaStr.match(/ESCALA:(.+?)\|(.+)/);
+          if (match) {
+            return {
+              chave: match[1].trim(),
+              valor: match[2].trim(),
+            };
+          }
+          return null;
+        })
+        .filter(e => e !== null) as { chave: string; valor: string }[];
+
+      if (escalas.length > 0) return escalas;
+    } catch (error) {
+      console.error("Erro ao parsear formato novo de escalas:", error);
+    }
+  }
+
+  // Fallback: formato antigo
   const limpo = texto
-    .replace(/•/g, "")           
-    .replace(/\r/g, "")        
-    .replace(/\n+/g, " ")    
-    .replace(/\s+/g, " ")      
+    .replace(/•/g, "")
+    .replace(/\r/g, "")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
   const regex = /([A-ZÀ-Ý][^:]{0,120}?):\s*([^:]+?)(?=(?:\s+[A-ZÀ-Ý][^:]{0,120}:\s)|$)/g;
@@ -39,6 +64,32 @@ function extrairEscalas(texto: string): { chave: string; valor: string }[] {
   }
 
   return matches;
+}
+
+function extrairRepertorio(texto: string): { nome: string; observacao: string }[] {
+  if (!texto || texto.trim() === "") return [];
+
+  // Regex para capturar músicas entre aspas seguidas de dois pontos e sua observação
+  // Exemplo: "Remando suavemente": tocada da capo ao fim...
+  const regex = /"([^"]+)":\s*([^"]+?)(?=\s*"|$)/g;
+  const musicas: { nome: string; observacao: string }[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(texto)) !== null) {
+    const nome = match[1].trim();
+    const observacao = match[2].trim().replace(/\.\s*$/, ""); // Remove ponto final se houver
+    
+    if (nome || observacao) {
+      musicas.push({ nome, observacao });
+    }
+  }
+
+  // Se não encontrou nenhuma música no formato esperado, retorna como texto único
+  if (musicas.length === 0) {
+    return [{ nome: "", observacao: texto.trim() }];
+  }
+
+  return musicas;
 }
 
 export const Relatorio = () => {
@@ -76,7 +127,6 @@ export const Relatorio = () => {
       </div>
     );
 
-
   return (
     <>
       <Header nome="" />
@@ -93,26 +143,28 @@ export const Relatorio = () => {
 
           <div className="mt-4">
             <strong>Repertório:</strong>
-            <ul className="list-disc ml-8">
-              {relatorio.repertorio
-                .split(/(?=\d+\.\s?)/)
-                .map((item, i) => {
-                  const texto = item.trim();
-                  return texto ? <li key={i}>{texto}</li> : null;
-                })}
+            <ul className="list-disc ml-6 mt-2">
+              {extrairRepertorio(relatorio.repertorio).map((musica, idx) => (
+                <li key={idx} className="mb-2">
+                  {musica.nome && (
+                    <strong className="text-indigo-600">"{musica.nome}":</strong>
+                  )}{" "}
+                  {musica.observacao}
+                </li>
+              ))}
             </ul>
           </div>
 
           <div className="mt-4">
-              <strong>Escalas:</strong>
-              <ul className="list-disc ml-6 mt-2">
-                {extrairEscalas(relatorio.escalas).map((item, idx) => (
-                  <li key={idx}>
-                    <strong>{item.chave}:</strong> {item.valor}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <strong>Escalas:</strong>
+            <ul className="list-disc ml-6 mt-2">
+              {extrairEscalas(relatorio.escalas).map((item, idx) => (
+                <li key={idx}>
+                  <strong>{item.chave}:</strong> {item.valor}
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <p className="mt-4">
             <strong>Observação:</strong> {relatorio.observacao}
