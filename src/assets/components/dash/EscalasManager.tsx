@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
@@ -25,25 +25,107 @@ export default function EscalasManager({ value, onChange }: EscalasManagerProps)
   const parseEscalas = (str: string): Escala[] => {
     if (!str || str.trim() === "") return [];
     
+    console.log('📥 Parseando escalas. Valor recebido:', str);
+    
     try {
-      const escalasArray = str.split(";").filter(e => e.trim());
-      return escalasArray.map((escalaStr, index) => {
-        const match = escalaStr.match(/ESCALA:(.+?)\|(.+)/);
-        if (match) {
+      // Formato novo: ESCALA:nome|conteudo;ESCALA:nome2|conteudo2
+      if (str.includes("ESCALA:") && str.includes("|")) {
+        console.log('✅ Detectado formato novo');
+        const escalasArray = str.split(";").filter(e => e.trim());
+        return escalasArray.map((escalaStr, index) => {
+          const match = escalaStr.match(/ESCALA:(.+?)\|(.+)/);
+          if (match) {
+            return {
+              id: `escala-${Date.now()}-${index}`,
+              nome: match[1].trim(),
+              conteudo: match[2].trim(),
+            };
+          }
           return {
             id: `escala-${Date.now()}-${index}`,
-            nome: match[1].trim(),
-            conteudo: match[2].trim(),
+            nome: "",
+            conteudo: escalaStr.trim(),
           };
+        });
+      }
+
+      console.log('⚠️ Formato antigo detectado, tentando parsear...');
+      
+      // Formato antigo: tenta extrair usando regex (padrão: Nome: conteudo)
+      let limpo = str
+        .replace(/•/g, "")
+        .replace(/\r/g, "")
+        .trim();
+
+      // Remove prefixos comuns como "Escalas:" no início
+      limpo = limpo.replace(/^Escalas:\s*/i, "");
+      limpo = limpo.replace(/^Repertório:\s*/i, "");
+
+      console.log('🧹 Texto limpo:', limpo);
+
+      // Tenta parsear formato com aspas: 1. 'Nome': descrição
+      const regexAspas = /\d+\.\s*'([^']+)':\s*([^']+?)(?=\d+\.\s*'|$)/g;
+      let matches: Escala[] = [];
+      let m: RegExpExecArray | null;
+      let index = 0;
+
+      while ((m = regexAspas.exec(limpo)) !== null) {
+        const nome = m[1].trim();
+        const conteudo = m[2].trim().replace(/\.\s*$/, "");
+        
+        if (nome && conteudo) {
+          matches.push({
+            id: `escala-${Date.now()}-${index}`,
+            nome: nome,
+            conteudo: conteudo,
+          });
+          index++;
         }
-        return {
-          id: `escala-${Date.now()}-${index}`,
-          nome: "",
-          conteudo: escalaStr.trim(),
-        };
-      });
+      }
+
+      if (matches.length > 0) {
+        console.log('✅ Escalas parseadas do formato numerado com aspas:', matches.length);
+        console.log('📝 Matches:', matches);
+        return matches;
+      }
+
+      // Fallback: formato padrão Nome: descrição
+      limpo = limpo.replace(/\n+/g, " ").replace(/\s+/g, " ");
+      const regex = /([A-ZÀ-Ý][^:]{0,120}?):\s*([^:]+?)(?=(?:\s+[A-ZÀ-Ý][^:]{0,120}:\s)|$)/g;
+      index = 0;
+
+      while ((m = regex.exec(limpo)) !== null) {
+        const nome = m[1].trim();
+        const conteudo = m[2].trim();
+        
+        // Ignora entradas vazias ou muito curtas
+        if (nome && conteudo && nome.length > 1) {
+          matches.push({
+            id: `escala-${Date.now()}-${index}`,
+            nome: nome,
+            conteudo: conteudo,
+          });
+          index++;
+        }
+      }
+
+      console.log('📝 Matches encontrados:', matches);
+
+      if (matches.length > 0) {
+        console.log('✅ Escalas parseadas do formato antigo:', matches.length);
+        return matches;
+      }
+
+      console.log('⚠️ Não conseguiu parsear com regex, retornando como escala única');
+      
+      // Se não conseguiu parsear, retorna como uma única escala sem nome
+      return [{
+        id: `escala-${Date.now()}-0`,
+        nome: "",
+        conteudo: limpo,
+      }];
     } catch (error) {
-      console.error("Erro ao parsear escalas:", error);
+      console.error("❌ Erro ao parsear escalas:", error);
       return [];
     }
   };
@@ -55,7 +137,15 @@ export default function EscalasManager({ value, onChange }: EscalasManagerProps)
       .join(";");
   };
 
-  const [escalas, setEscalas] = useState<Escala[]>(() => parseEscalas(value));
+  const [escalas, setEscalas] = useState<Escala[]>([]);
+
+  // Atualiza quando o value prop mudar (Ex: quando carrega dados no Edit)
+  useEffect(() => {
+    console.log('🔄 EscalasManager recebeu novo valor:', value);
+    const parsed = parseEscalas(value);
+    console.log('📋 Escalas parseadas:', parsed);
+    setEscalas(parsed);
+  }, [value]);
 
   const updateEscalas = (newEscalas: Escala[]) => {
     setEscalas(newEscalas);

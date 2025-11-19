@@ -33,10 +33,14 @@ export default function RelatorioEdit() {
   }, []);
 
   // Carregar dados do relatório
-  useEffect(() => {
+useEffect(() => {
   const fetchRelatorio = async () => {
     try {
       const data = await relatorioService.getRelatorioById(Number(id));
+      console.log('📋 Dados do relatório:', data);
+      console.log('🎵 Escalas:', data.escalas);
+      console.log('🎼 Repertório:', data.repertorio);
+      
       setFormState((prev) => ({
         ...prev,
         values: {
