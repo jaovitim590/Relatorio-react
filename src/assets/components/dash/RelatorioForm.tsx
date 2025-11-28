@@ -6,7 +6,6 @@ import TextField from "@mui/material/TextField";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import MenuItem from "@mui/material/MenuItem";
-import EscalasManager from "./EscalasManager";
 
 export interface AlunoRef { 
   id: number; 
@@ -130,10 +129,19 @@ export default function RelatorioForm({
           sx={{ '& .MuiInputBase-root': { alignItems: 'flex-start' } }}
         />
 
-        {/* Escalas — NOVO: Gerenciador de Escalas */}
-        <EscalasManager
+        {/* Escalas - Simplificado */}
+        <TextField
+          fullWidth
+          label="Escalas"
+          multiline
+          minRows={5}
+          maxRows={12}
           value={formState.values.escalas}
-          onChange={(newValue) => onFieldChange("escalas", newValue)}
+          onChange={e => onFieldChange("escalas", e.target.value)}
+          error={!!formState.errors.escalas}
+          helperText={formState.errors.escalas ?? "Liste as escalas trabalhadas na aula"}
+          placeholder="Ex: Dó maior, Sol maior, Lá menor..."
+          sx={{ '& .MuiInputBase-root': { alignItems: 'flex-start' } }}
         />
 
         {/* Repertório */}

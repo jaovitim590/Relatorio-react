@@ -16,80 +16,78 @@ type Relatorio = {
   };
 };
 
-function extrairEscalas(texto: string): { chave: string; valor: string }[] {
-  if (!texto || texto.trim() === "") return [];
+// Detecta se o texto parece ser de escalas
+function isEscalaContent(texto: string): boolean {
+  if (!texto) return false;
+  const patterns = [
+    /escala de (dó|ré|mi|fá|sol|lá|si)/i,
+    /arpejo/i,
+    /maior|menor/i,
+    /ESCALA:/,
+  ];
+  return patterns.filter(p => p.test(texto)).length >= 2;
+}
 
-  // Verifica se está no formato novo: ESCALA:nome|conteudo;ESCALA:nome2|conteudo2
+// Detecta se o texto parece ser repertório (músicas)
+function isRepertorioContent(texto: string): boolean {
+  if (!texto) return false;
+  const patterns = [
+    /['"][\w\s]+['"]/,  // Texto entre aspas
+    /tocada|executada/i,
+    /música|musette|minueto|gavotte|remando|trumpet/i,
+    /^\d+\./m, // Começa com número
+  ];
+  return patterns.filter(p => p.test(texto)).length >= 2;
+}
+
+// Detecta se o texto parece ser observação geral
+function isObservacaoContent(texto: string): boolean {
+  if (!texto) return false;
+  const patterns = [
+    /demonstrou|obteve|precisa melhorar|teve|apresentou/i,
+    /desempenho|evolução|progresso/i,
+  ];
+  return patterns.filter(p => p.test(texto)).length >= 1;
+}
+
+// Formata escalas do formato antigo para legível
+function formatarEscalas(texto: string): string {
+  if (!texto || texto.trim() === "") return "";
+  
+  // Formato ESCALA:nome|status;
   if (texto.includes("ESCALA:") && texto.includes("|")) {
     try {
       const escalas = texto
         .split(";")
         .filter(e => e.trim())
-        .map(escalaStr => {
+        .map((escalaStr) => {
           const match = escalaStr.match(/ESCALA:(.+?)\|(.+)/);
           if (match) {
-            return {
-              chave: match[1].trim(),
-              valor: match[2].trim(),
-            };
+            return `• ${match[1].trim()}: ${match[2].trim()}`;
           }
           return null;
         })
-        .filter(e => e !== null) as { chave: string; valor: string }[];
+        .filter(e => e !== null);
 
-      if (escalas.length > 0) return escalas;
+      return escalas.length > 0 ? escalas.join("\n") : texto;
     } catch (error) {
-      console.error("Erro ao parsear formato novo de escalas:", error);
+      console.error("Erro ao formatar escalas:", error);
     }
   }
-
-  // Fallback: formato antigo
-  const limpo = texto
-    .replace(/•/g, "")
-    .replace(/\r/g, "")
-    .replace(/\n+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  const regex = /([A-ZÀ-Ý][^:]{0,120}?):\s*([^:]+?)(?=(?:\s+[A-ZÀ-Ý][^:]{0,120}:\s)|$)/g;
-
-  const matches: { chave: string; valor: string }[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = regex.exec(limpo)) !== null) {
-    matches.push({ chave: m[1].trim(), valor: m[2].trim() });
-  }
-
-  if (matches.length === 0) {
-    return [{ chave: "Escalas", valor: limpo }];
-  }
-
-  return matches;
+  
+  return texto;
 }
 
-function extrairRepertorio(texto: string): { nome: string; observacao: string }[] {
-  if (!texto || texto.trim() === "") return [];
-
-  // Regex para capturar músicas entre aspas seguidas de dois pontos e sua observação
-  // Exemplo: "Remando suavemente": tocada da capo ao fim...
-  const regex = /"([^"]+)":\s*([^"]+?)(?=\s*"|$)/g;
-  const musicas: { nome: string; observacao: string }[] = [];
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(texto)) !== null) {
-    const nome = match[1].trim();
-    const observacao = match[2].trim().replace(/\.\s*$/, ""); // Remove ponto final se houver
-    
-    if (nome || observacao) {
-      musicas.push({ nome, observacao });
-    }
-  }
-
-  // Se não encontrou nenhuma música no formato esperado, retorna como texto único
-  if (musicas.length === 0) {
-    return [{ nome: "", observacao: texto.trim() }];
-  }
-
-  return musicas;
+// Formata texto removendo bullets estranhos e melhorando legibilidade
+function formatarTexto(texto: string): string {
+  if (!texto) return "";
+  
+  return texto
+    .replace(/•/g, "\n• ") // Adiciona quebra antes de bullets
+    .replace(/(\d+)\.\s*/g, "\n$1. ") // Adiciona quebra antes de números
+    .replace(/^\s+/gm, "") // Remove espaços no início das linhas
+    .replace(/\n{3,}/g, "\n\n") // Remove quebras excessivas
+    .trim();
 }
 
 export const Relatorio = () => {
@@ -101,7 +99,30 @@ export const Relatorio = () => {
     const fetchRelatorio = async () => {
       try {
         const data = await relatorioService.getRelatorioById(Number(id));
-        setRelatorio(data);
+        
+        let observacao = data.observacao;
+        let escalas = data.escalas;
+        let repertorio = data.repertorio;
+        
+        // Detecta e corrige campos trocados (relatórios antigos)
+        const obsIsEscala = isEscalaContent(observacao);
+        const escIsRepertorio = isRepertorioContent(escalas);
+        const repIsObservacao = isObservacaoContent(repertorio);
+        
+        // Padrão: obs=escalas, esc=repertorio, rep=observacao → corrige
+        if (obsIsEscala && escIsRepertorio && repIsObservacao) {
+          const temp = observacao;
+          observacao = repertorio; // observacao real estava em repertorio
+          repertorio = escalas;    // repertorio real estava em escalas
+          escalas = temp;          // escalas reais estavam em observacao
+        }
+        
+        setRelatorio({
+          ...data,
+          observacao: formatarTexto(observacao),
+          escalas: formatarEscalas(escalas) || formatarTexto(escalas),
+          repertorio: formatarTexto(repertorio),
+        });
       } catch (error) {
         console.error(error);
         setErro("Erro ao carregar relatório");
@@ -135,46 +156,50 @@ export const Relatorio = () => {
           {relatorio.aluno.nome}
         </h1>
 
-        <section className="bg-white text-black w-full max-w-3xl rounded-3xl p-8 shadow-lg text-1xl">
-          <p className="text-2xl">
-            <strong>Dia:</strong>{" "}
-            {new Date(relatorio.dia).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
-          </p>
-
-          <div className="mt-4">
-            <strong>Repertório:</strong>
-            <ul className="list-disc ml-6 mt-2">
-              {extrairRepertorio(relatorio.repertorio).map((musica, idx) => (
-                <li key={idx} className="mb-2">
-                  {musica.nome && (
-                    <strong className="text-indigo-600">"{musica.nome}":</strong>
-                  )}{" "}
-                  {musica.observacao}
-                </li>
-              ))}
-            </ul>
+        <section className="bg-white text-black w-full max-w-3xl rounded-3xl p-8 shadow-lg">
+          {/* Data */}
+          <div className="mb-6 pb-4 border-b-2 border-gray-200">
+            <p className="text-2xl">
+              <strong className="text-indigo-600">Dia:</strong>{" "}
+              {new Date(relatorio.dia).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
+            </p>
           </div>
 
-          <div className="mt-4">
-            <strong>Escalas:</strong>
-            <ul className="list-disc ml-6 mt-2">
-              {extrairEscalas(relatorio.escalas).map((item, idx) => (
-                <li key={idx}>
-                  <strong>{item.chave}:</strong> {item.valor}
-                </li>
-              ))}
-            </ul>
+          {/* Observação */}
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-indigo-600 mb-3">📝 Observação Geral</h3>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-xl border-l-4 border-indigo-400 shadow-sm">
+              <p className="whitespace-pre-line leading-relaxed text-gray-800">
+                {relatorio.observacao || "Nenhuma observação registrada"}
+              </p>
+            </div>
           </div>
 
-          <p className="mt-4">
-            <strong>Observação:</strong> {relatorio.observacao}
-          </p>
+          {/* Escalas */}
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-purple-600 mb-3">🎵 Escalas Trabalhadas</h3>
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-5 rounded-xl border-l-4 border-purple-400 shadow-sm">
+              <p className="whitespace-pre-line leading-relaxed text-gray-800">
+                {relatorio.escalas || "Nenhuma escala registrada"}
+              </p>
+            </div>
+          </div>
+
+          {/* Repertório */}
+          <div>
+            <h3 className="text-xl font-bold text-green-600 mb-3">🎼 Repertório</h3>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-5 rounded-xl border-l-4 border-green-400 shadow-sm">
+              <p className="whitespace-pre-line leading-relaxed text-gray-800">
+                {relatorio.repertorio || "Nenhum repertório registrado"}
+              </p>
+            </div>
+          </div>
         </section>
 
         <div className="text-center mt-8">
           <Link
             to={`/${relatorio.aluno.nome}`}
-            className="bg-indigo-400 text-white rounded-2xl px-6 py-2 duration-300 hover:scale-110 hover:bg-indigo-300 font-medium"
+            className="bg-indigo-400 text-white rounded-2xl px-6 py-2 duration-300 hover:scale-110 hover:bg-indigo-300 font-medium inline-block"
           >
             Voltar
           </Link>
